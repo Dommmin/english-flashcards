@@ -24,10 +24,10 @@ export default function NewDeckPage() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim() || words.length === 0) return;
     setSaving(true);
-    const deck = storage.createDeck(name.trim(), words);
+    const deck = await storage.createDeck(name.trim(), words);
     router.push(`/decks/${deck.id}`);
   };
 

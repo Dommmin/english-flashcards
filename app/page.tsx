@@ -10,19 +10,18 @@ import DeckCard from "@/components/DeckCard";
 
 export default function Home() {
   const [decks, setDecks] = useState<Deck[]>([]);
-  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setDecks(storage.listDecks());
-    setMounted(true);
+    storage.listDecks().then(setDecks).finally(() => setLoading(false));
   }, []);
 
-  const handleDelete = (id: string) => {
-    storage.deleteDeck(id);
+  const handleDelete = async (id: string) => {
+    await storage.deleteDeck(id);
     setDecks((prev) => prev.filter((d) => d.id !== id));
   };
 
-  if (!mounted) return null;
+  if (loading) return null;
 
   return (
     <main className="min-h-screen bg-background">

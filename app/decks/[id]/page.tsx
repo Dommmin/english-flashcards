@@ -15,17 +15,14 @@ export default function DeckPage() {
   const router = useRouter();
   const [deck, setDeck] = useState<Deck | null>(null);
   const [index, setIndex] = useState(0);
-  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const d = storage.getDeck(id);
-    if (!d) {
-      router.replace("/");
-      return;
-    }
-    setDeck(d);
-    setIndex(d.currentIndex);
-    setMounted(true);
+    storage.getDeck(id).then((d) => {
+      if (!d) { router.replace("/"); return; }
+      setDeck(d);
+      setIndex(d.currentIndex);
+    }).finally(() => setLoading(false));
   }, [id, router]);
 
   const navigate = useCallback(
@@ -41,7 +38,7 @@ export default function DeckPage() {
   const goNext = useCallback(() => navigate(index + 1), [navigate, index]);
   const goPrev = useCallback(() => navigate(index - 1), [navigate, index]);
 
-  if (!mounted || !deck) return null;
+  if (loading || !deck) return null;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
