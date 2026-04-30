@@ -23,6 +23,7 @@ export default function FlashCard({ word, index, total, onNext, onPrev }: Props)
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
   const touchMoved = useRef(false);
+  const justTouched = useRef(false);
   const { speak, stop, speaking, supported } = useSpeech();
 
   // Load autoRead preference once
@@ -88,15 +89,17 @@ export default function FlashCard({ word, index, total, onNext, onPrev }: Props)
     if (touchStartX.current === null) return;
     const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
     const dy = Math.abs(e.touches[0].clientY - (touchStartY.current ?? 0));
-    if (dx > 10 || dy > 10) touchMoved.current = true;
+    if (dx > 20 || dy > 20) touchMoved.current = true;
   };
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return;
     const dx = e.changedTouches[0].clientX - touchStartX.current;
     const dy = e.changedTouches[0].clientY - (touchStartY.current ?? 0);
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
-      if (dx > 0) onNext(); else onPrev();
+      justTouched.current = true;
+      if (dx < 0) onNext(); else onPrev();
     } else if (!touchMoved.current) {
+      justTouched.current = true;
       setFlipped((f) => !f);
     }
     touchStartX.current = null;
@@ -123,7 +126,10 @@ export default function FlashCard({ word, index, total, onNext, onPrev }: Props)
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onClick={() => setFlipped((f) => !f)}
+        onClick={() => {
+          if (justTouched.current) { justTouched.current = false; return; }
+          setFlipped((f) => !f);
+        }}
       >
         <div
           className="relative w-full transition-transform duration-500 ease-in-out"
