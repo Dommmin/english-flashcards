@@ -21,8 +21,14 @@ export default function CSVImport({ onImport, currentCount = 0 }: Props) {
         header: true,
         skipEmptyLines: true,
         complete(results) {
+          // Normalize headers to lowercase so "Translation" == "translation"
+          const normalized = results.data.map((row) =>
+            Object.fromEntries(
+              Object.entries(row).map(([k, v]) => [k.trim().toLowerCase(), v])
+            )
+          );
           const words: Word[] = [];
-          for (const row of results.data) {
+          for (const row of normalized) {
             const english = (row.english || "").trim();
             const polish = (row.polish || "").trim();
             const example = (row.example || "").trim();
@@ -30,8 +36,9 @@ export default function CSVImport({ onImport, currentCount = 0 }: Props) {
             if (english) words.push({ english, polish, example, translation: translation || undefined });
           }
           if (words.length === 0) {
+            const found = results.meta.fields?.join(", ") ?? "brak";
             setError(
-              "Brak słówek. Wymagane kolumny: english, polish, example (+ opcjonalnie translation)."
+              `Brak słówek. Wymagane: english, polish, example. Znalezione kolumny: ${found}`
             );
             return;
           }
