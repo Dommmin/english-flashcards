@@ -32,27 +32,20 @@ export default function FlashCard({ word, index, total, onNext, onPrev }: Props)
     if (saved !== null) setAutoRead(saved === "true");
   }, []);
 
-  // Auto-read when card changes
+  // Auto-read when card changes: słowo, potem zdanie przykładowe
   useEffect(() => {
     setFlipped(false);
     if (autoRead && supported) {
-      // Small delay so the flip animation starts first
-      const t = setTimeout(() => speak(word.english), 300);
-      return () => clearTimeout(t);
+      const t1 = setTimeout(() => speak(word.english), 300);
+      const t2 = word.example
+        ? setTimeout(() => speak(word.example), 1800)
+        : null;
+      return () => { clearTimeout(t1); if (t2) clearTimeout(t2); };
     } else {
       stop();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
-
-  // Read example sentence when card is flipped to back
-  useEffect(() => {
-    if (flipped && autoRead && supported && word.example) {
-      const t = setTimeout(() => speak(word.example!), 400);
-      return () => clearTimeout(t);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flipped]);
 
   // When autoRead is toggled on, read current word immediately
   const toggleAutoRead = () => {
@@ -141,16 +134,24 @@ export default function FlashCard({ word, index, total, onNext, onPrev }: Props)
         >
           {/* Front */}
           <div
-            className="absolute inset-0 rounded-2xl bg-card border border-border flex flex-col items-center justify-center p-8 gap-3"
+            className="absolute inset-0 rounded-2xl bg-card border border-border flex flex-col items-center justify-center p-8 gap-0"
             style={{ backfaceVisibility: "hidden" }}
           >
-            <p className="text-xs uppercase tracking-widest text-muted-foreground font-mono">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground font-mono mb-4">
               angielski
             </p>
             <p className="text-4xl font-bold text-foreground text-center leading-tight">
               {word.english}
             </p>
-            <p className="text-muted-foreground/40 text-xs mt-2">
+            {word.example && (
+              <>
+                <div className="w-8 h-px bg-border mt-5 mb-4" />
+                <p className="text-muted-foreground text-sm italic text-center leading-relaxed max-w-xs">
+                  &ldquo;{word.example}&rdquo;
+                </p>
+              </>
+            )}
+            <p className="text-muted-foreground/30 text-xs mt-6">
               dotknij, aby odkryć
             </p>
           </div>
@@ -163,14 +164,14 @@ export default function FlashCard({ word, index, total, onNext, onPrev }: Props)
             <p className="text-xs uppercase tracking-widest text-muted-foreground font-mono mb-4">
               tłumaczenie
             </p>
-            <p className="text-3xl font-bold text-primary text-center leading-snug mb-5">
+            <p className="text-3xl font-bold text-primary text-center leading-snug">
               {word.polish || "—"}
             </p>
-            {word.example && (
+            {word.translation && (
               <>
-                <div className="w-8 h-px bg-border mb-4" />
+                <div className="w-8 h-px bg-border mt-5 mb-4" />
                 <p className="text-muted-foreground text-sm italic text-center leading-relaxed max-w-xs">
-                  &ldquo;{word.example}&rdquo;
+                  &ldquo;{word.translation}&rdquo;
                 </p>
               </>
             )}

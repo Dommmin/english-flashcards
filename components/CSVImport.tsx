@@ -26,11 +26,12 @@ export default function CSVImport({ onImport, currentCount = 0 }: Props) {
             const english = (row.english || "").trim();
             const polish = (row.polish || "").trim();
             const example = (row.example || "").trim();
-            if (english) words.push({ english, polish, example });
+            const translation = (row.translation || "").trim();
+            if (english) words.push({ english, polish, example, translation: translation || undefined });
           }
           if (words.length === 0) {
             setError(
-              "Brak słówek. Wymagane kolumny: english, polish, example."
+              "Brak słówek. Wymagane kolumny: english, polish, example (+ opcjonalnie translation)."
             );
             return;
           }
@@ -101,7 +102,7 @@ export default function CSVImport({ onImport, currentCount = 0 }: Props) {
         <p className="font-semibold text-sm mb-1">Przeciągnij plik CSV</p>
         <p className="text-muted-foreground text-xs">lub kliknij, aby wybrać</p>
         <p className="font-mono text-xs text-muted-foreground/60 mt-4">
-          english · polish · example
+          english · polish · example · translation (opt.)
         </p>
       </label>
       {error && (

@@ -1,7 +1,7 @@
 import { model, models, Schema } from "mongoose";
 
 const WordSchema = new Schema(
-  { english: String, polish: String, example: String },
+  { english: String, polish: String, example: String, translation: String },
   { _id: false }
 );
 
