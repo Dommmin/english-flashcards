@@ -41,21 +41,52 @@ export function useSpeech() {
     return () => window.speechSynthesis.removeEventListener("voiceschanged", load);
   }, []);
 
-  const speak = useCallback(
-    (text: string) => {
-      if (!supported || !text) return;
-      window.speechSynthesis.cancel();
+  const makeUtt = useCallback(
+    (text: string): SpeechSynthesisUtterance => {
       const utt = new SpeechSynthesisUtterance(text);
       utt.lang = "en-US";
       utt.rate = 0.88;
       utt.pitch = 1;
       if (voiceRef.current) utt.voice = voiceRef.current;
+      return utt;
+    },
+    []
+  );
+
+  const speak = useCallback(
+    (text: string) => {
+      if (!supported || !text) return;
+      window.speechSynthesis.cancel();
+      const utt = makeUtt(text);
       utt.onstart = () => setSpeaking(true);
       utt.onend = () => setSpeaking(false);
       utt.onerror = () => setSpeaking(false);
       window.speechSynthesis.speak(utt);
     },
-    [supported]
+    [supported, makeUtt]
+  );
+
+  // Speaks texts one after another, chained via onend
+  const speakAll = useCallback(
+    (texts: string[]) => {
+      if (!supported) return;
+      const filtered = texts.filter(Boolean);
+      if (filtered.length === 0) return;
+
+      window.speechSynthesis.cancel();
+
+      const speakNext = (remaining: string[]) => {
+        if (remaining.length === 0) { setSpeaking(false); return; }
+        const utt = makeUtt(remaining[0]);
+        utt.onstart = () => setSpeaking(true);
+        utt.onend = () => speakNext(remaining.slice(1));
+        utt.onerror = () => setSpeaking(false);
+        window.speechSynthesis.speak(utt);
+      };
+
+      speakNext(filtered);
+    },
+    [supported, makeUtt]
   );
 
   const stop = useCallback(() => {
@@ -63,5 +94,5 @@ export function useSpeech() {
     setSpeaking(false);
   }, []);
 
-  return { speak, stop, speaking, supported };
+  return { speak, speakAll, stop, speaking, supported };
 }

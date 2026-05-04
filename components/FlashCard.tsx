@@ -24,7 +24,7 @@ export default function FlashCard({ word, index, total, onNext, onPrev }: Props)
   const touchStartY = useRef<number | null>(null);
   const touchMoved = useRef(false);
   const justTouched = useRef(false);
-  const { speak, stop, speaking, supported } = useSpeech();
+  const { speak, speakAll, stop, speaking, supported } = useSpeech();
 
   // Load autoRead preference once
   useEffect(() => {
@@ -32,15 +32,12 @@ export default function FlashCard({ word, index, total, onNext, onPrev }: Props)
     if (saved !== null) setAutoRead(saved === "true");
   }, []);
 
-  // Auto-read when card changes: słowo, potem zdanie przykładowe
+  // Auto-read when card changes: słowo → zdanie (po sobie, przez onend)
   useEffect(() => {
     setFlipped(false);
     if (autoRead && supported) {
-      const t1 = setTimeout(() => speak(word.english), 300);
-      const t2 = word.example
-        ? setTimeout(() => speak(word.example), 1800)
-        : null;
-      return () => { clearTimeout(t1); if (t2) clearTimeout(t2); };
+      const t = setTimeout(() => speakAll([word.english, word.example]), 300);
+      return () => clearTimeout(t);
     } else {
       stop();
     }
@@ -52,7 +49,7 @@ export default function FlashCard({ word, index, total, onNext, onPrev }: Props)
     const next = !autoRead;
     setAutoRead(next);
     localStorage.setItem(AUTO_READ_KEY, String(next));
-    if (next && supported) speak(word.english);
+    if (next && supported) speakAll([word.english, word.example]);
     else stop();
   };
 
@@ -187,7 +184,7 @@ export default function FlashCard({ word, index, total, onNext, onPrev }: Props)
             variant="outline"
             size="sm"
             className="gap-2"
-            onClick={() => speak(word.english)}
+            onClick={() => speakAll([word.english, word.example])}
             disabled={speaking}
           >
             {speaking ? (
